@@ -7,6 +7,17 @@ using PDV.API.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Render (e a maioria dos PaaS) atribui a porta dinamicamente via $PORT.
+// `UseUrls` não bastaria aqui: o Kestrel:Endpoints explícito do appsettings.json
+// tem prioridade sobre ele e continuaria vencendo. Sobrescrever a própria chave de
+// configuração é o que realmente muda o endpoint — e some quando $PORT não existe,
+// deixando o valor fixo do appsettings.json valer para rodar localmente.
+var portDoAmbiente = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrWhiteSpace(portDoAmbiente))
+{
+    builder.Configuration["Kestrel:Endpoints:Http:Url"] = $"http://0.0.0.0:{portDoAmbiente}";
+}
+
 // ── Infraestrutura + Application ──────────────────────────────────────────────
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
