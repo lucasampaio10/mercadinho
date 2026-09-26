@@ -308,6 +308,28 @@ dotnet test
 
 ---
 
+## ☁️ Produção (Render + Neon)
+
+O backend roda em produção como container Docker no **Render** (`backend/Dockerfile`), com o Postgres hospedado no **Neon** (serverless, plano gratuito).
+
+| Serviço | O quê | URL |
+|---|---|---|
+| API | Web Service Docker no Render | https://pdv-mercadinho-api.onrender.com |
+| Banco | Projeto Postgres 16 no Neon | painel: [console.neon.tech](https://console.neon.tech) |
+
+**Variáveis de ambiente** (configuradas direto no dashboard do Render, nunca commitadas):
+- `API_KEY` — chave de produção, diferente da usada em dev local
+- `POSTGRES_CONNECTION_STRING` — aponta para o host **não-pooled** do Neon (`ep-...aws.neon.tech`, sem `-pooler`). O app usa um *advisory lock* do Postgres para aplicar migrations com segurança contra deploys concorrentes (veja `ApplyMigrationsAsync`), e isso exige uma conexão de sessão — o pooler do Neon roda em modo *transaction*, que não sustenta advisory lock entre statements.
+- `CORS_ORIGINS` — mesma lista de sempre; não afeta o app nativo (Android/iOS), só importa se algum dia abrir a API pelo navegador
+
+**Porta dinâmica:** Render atribui a porta via `$PORT`, diferente do `5000` fixo usado em dev. O `Kestrel:Endpoints` do `appsettings.json` tem prioridade sobre `WebHost.UseUrls()` — por isso `Program.cs` sobrescreve a própria chave de configuração (`builder.Configuration["Kestrel:Endpoints:Http:Url"]`) quando `$PORT` existe, em vez de usar `UseUrls()`, que seria silenciosamente ignorado.
+
+**Plano gratuito do Render "dorme"** depois de ~15 min sem tráfego — a primeira requisição depois disso demora uns 30-50s para acordar o container. Normal, não é bug.
+
+O app mobile aponta para essa URL via `frontend/.env` (`EXPO_PUBLIC_API_URL`) — funciona de qualquer rede, não só da loja.
+
+---
+
 ## 📦 Stack
 
 **Backend:** .NET 8, C# 12, ASP.NET Core, Entity Framework Core, Npgsql, PostgreSQL, xUnit  
