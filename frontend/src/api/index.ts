@@ -13,9 +13,15 @@ const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5000';
  */
 const API_KEY = process.env.EXPO_PUBLIC_API_KEY ?? '';
 
+/**
+ * 45s, não os 10s de uma API que nunca dorme: o plano free do Render suspende o
+ * serviço após ~15min sem tráfego, e a primeira requisição depois disso paga o
+ * cold start (a própria Render cita até 50s). Com um timeout curto, essa primeira
+ * chamada do dia sempre falhava antes da API sequer acordar.
+ */
 const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 10_000,
+  timeout: 45_000,
   headers: {
     'Content-Type': 'application/json',
     ...(API_KEY ? { 'X-API-Key': API_KEY } : {}),
@@ -38,8 +44,10 @@ export function mensagemDeErro(err: unknown, fallback: string): string {
     if (err.response?.status === 401) {
       return 'A API recusou a chave de acesso. Confira EXPO_PUBLIC_API_KEY no .env.';
     }
-    if (err.code === 'ECONNABORTED') return 'A API demorou demais para responder.';
-    if (!err.response) return 'Sem conexão com a API. Verifique se o backend está rodando.';
+    if (err.code === 'ECONNABORTED') {
+      return 'A API demorou demais para responder. Se o sistema estava parado há um tempo, o servidor pode estar iniciando — tente de novo em alguns segundos.';
+    }
+    if (!err.response) return 'Sem conexão com a API. Verifique sua internet ou se o backend está rodando.';
   }
   return fallback;
 }
