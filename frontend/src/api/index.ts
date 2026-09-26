@@ -14,18 +14,38 @@ const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5000';
 const API_KEY = process.env.EXPO_PUBLIC_API_KEY ?? '';
 
 /**
- * 45s, não os 10s de uma API que nunca dorme: o plano free do Render suspende o
+ * 60s, não os 10s de uma API que nunca dorme: o plano free do Render suspende o
  * serviço após ~15min sem tráfego, e a primeira requisição depois disso paga o
- * cold start (a própria Render cita até 50s). Com um timeout curto, essa primeira
- * chamada do dia sempre falhava antes da API sequer acordar.
+ * cold start — a Render cita "até 50s", só que na prática já foi medido acima
+ * disso quando o Postgres do Neon também estava suspenso (o app espera a conexão
+ * com o banco antes de responder qualquer coisa). Com um timeout curto, essa
+ * primeira chamada do dia sempre falhava antes da API sequer acordar.
  */
 const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 45_000,
+  timeout: 60_000,
   headers: {
     'Content-Type': 'application/json',
     ...(API_KEY ? { 'X-API-Key': API_KEY } : {}),
   },
+});
+
+/**
+ * Uma segunda tentativa automática quando a primeira falha por timeout ou sem
+ * resposta nenhuma — não para erros de negócio (400/401/etc), que já vieram do
+ * backend e repetir não muda nada. O cold start do Render é o caso que isso
+ * cobre: a 1ª chamada "acorda" o servidor (e pode estourar o timeout antes dele
+ * responder), a 2ª já encontra tudo de pé e volta rápido. Evita o operador
+ * precisar apertar "Tentar novamente" manualmente logo de cara.
+ */
+api.interceptors.response.use(undefined, async (err) => {
+  const config = err?.config as (typeof err.config & { _retryApósColdStart?: boolean }) | undefined;
+  const semResposta = axios.isAxiosError(err) && !err.response;
+  if (config && semResposta && !config._retryApósColdStart) {
+    config._retryApósColdStart = true;
+    return api(config);
+  }
+  return Promise.reject(err);
 });
 
 /**
