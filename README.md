@@ -220,6 +220,26 @@ O app nativo (Android/iOS) não passa por CORS — só precisa da `EXPO_PUBLIC_A
 
 ---
 
+### 5. Gerar o APK (EAS Build)
+
+```bash
+cd frontend
+npx eas-cli build -p android --profile preview
+```
+
+> ⚠️ **`frontend/.env` NÃO chega no build da nuvem.** Ele é local e fica de fora do Git de propósito (tem a chave da API); a EAS clona o repositório do zero pra buildar, então esse arquivo simplesmente não existe lá — sem isso, `EXPO_PUBLIC_API_URL`/`EXPO_PUBLIC_API_KEY` ficam `undefined` no bundle e o app cai no fallback `http://localhost:5000`, que não existe no celular. Foi exatamente esse bug que fez toda tela do app dar "Sem conexão com a API" nos primeiros builds — o log do build até avisava (`No environment variables ... found for the "preview" environment on EAS`), mas passou despercebido três builds seguidos.
+>
+> As variáveis de produção precisam estar cadastradas **no próprio EAS** (não dependem do `.env` local):
+> ```bash
+> npx eas-cli env:set --name EXPO_PUBLIC_API_URL --value "https://pdv-mercadinho-api.onrender.com" --environment preview --environment production --visibility plaintext
+> npx eas-cli env:set --name EXPO_PUBLIC_API_KEY --value "<API_KEY de produção>" --environment preview --environment production --visibility sensitive
+> ```
+> Confira com `npx eas-cli env:list preview`. Só precisa fazer isso uma vez — builds seguintes já puxam essas variáveis automaticamente.
+
+O link de download do APK aparece no fim do comando (e em `npx eas-cli build:view <id>`, campo `Application Archive URL`).
+
+---
+
 ## 📋 Endpoints da API
 
 | Método | Rota | Descrição |
