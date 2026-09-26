@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "PDV Mercadinho",
+    "slug": "pdv-mercadinho",
+    "version": "1.0.0",
+    "orientation": "default",
+    "userInterfaceStyle": "light",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "scheme": "pdv",
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#2D6A4F"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "O PDV usa a câmera para ler o código de barras do produto."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

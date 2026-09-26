@@ -1,0 +1,32 @@
+# ── .NET ─────────────────────────────────────────────────────────────────────
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.DotSettings
+TestResults/
+
+# Segredos — nunca commitar
+# A connection string e a API_KEY vivem no appsettings.Development.json local;
+# o modelo versionado é o appsettings.Development.example.json.
+backend/.env
+backend/src/**/appsettings.Development.json
+backend/src/**/appsettings.Production.json
+backend/src/**/appsettings.*.local.json
+
+# ── Node / Expo ───────────────────────────────────────────────────────────────
+node_modules/
+frontend/.expo/
+frontend/dist/
+frontend/web-build/
+frontend/.env
+*.log
+npm-debug.log*
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+# volumes ficam no sistema, não no repo
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
