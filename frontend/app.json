@@ -11,7 +11,11 @@
       "web"
     ],
     "android": {
-      "package": "com.pdvmercadinho.app"
+      "package": "com.pdvmercadinho.app",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -37,6 +41,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2dd4c93d-9db6-4c75-8308-0df056543597"
+      }
+    },
+    "owner": "lukasrocha0402"
   }
 }
